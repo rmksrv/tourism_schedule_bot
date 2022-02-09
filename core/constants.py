@@ -1,10 +1,46 @@
+from datetime import date
 from enum import Enum
 
 
-class Days(Enum):
+BOT_NAME = "TourismSchedule"
+BOT_USERNAME = "tourism_schedule_bot"
+
+
+class BotCommands(Enum):
+    Today = "Сегодня"
+    Tomorrow = "Завтра"
+    IsBottomWeek = "Эта неделя нижняя?"
+    Monday = "Понедельник"
+    Tuesday = "Вторник"
+    Wednesday = "Среда"
+    Thursday = "Четверг"
+    Friday = "Пятница"
+    Saturday = "Суббота"
+
+
+class Weekdays(Enum):
     Monday = "ПОНЕДЕЛЬНИК"
     Tuesday = "ВТОРНИК"
     Wednesday = "СРЕДА"
     Thursday = "ЧЕТВЕРГ"
     Friday = "ПЯТНИЦА"
     Saturday = "СУББОТА"
+    Sunday = "ВОСКРЕСЕНЬЕ"
+
+    @classmethod
+    def from_date(cls, d: date):
+        weekday = d.weekday() + 1
+        if weekday == 1:
+            return Weekdays.Monday
+        elif weekday == 2:
+            return Weekdays.Tuesday
+        elif weekday == 3:
+            return Weekdays.Wednesday
+        elif weekday == 4:
+            return Weekdays.Thursday
+        elif weekday == 5:
+            return Weekdays.Friday
+        elif weekday == 6:
+            return Weekdays.Saturday
+        elif weekday == 7:
+            return Weekdays.Sunday
