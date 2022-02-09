@@ -14,7 +14,6 @@ def beautified_schedule_response(schedule: Dict[str, Optional[str]]) -> str:
     for time, lesson in schedule.items():
         if not lesson:
             continue
-        response += f"<b>{time.replace('.', ':')}</b>\n" \
-                    f"<i>{lesson}</i>\n\n"
+        response += f"<b>{time.replace('.', ':')}</b>\n" f"<i>{lesson}</i>\n\n"
 
     return response

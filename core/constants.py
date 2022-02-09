@@ -5,11 +5,14 @@ from enum import Enum
 BOT_NAME = "TourismSchedule"
 BOT_USERNAME = "tourism_schedule_bot"
 
+SCHEDULES_PAGE_URL = r"http://www.imomi.unn.ru/education/raspisanie-zanyatiy"
+
 
 class BotCommands(Enum):
     Today = "Сегодня"
     Tomorrow = "Завтра"
     IsBottomWeek = "Эта неделя нижняя?"
+    ForEnglishSpeaker = "For English-speaking students"
     Monday = "Понедельник"
     Tuesday = "Вторник"
     Wednesday = "Среда"

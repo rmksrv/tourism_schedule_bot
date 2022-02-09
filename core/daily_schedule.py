@@ -58,13 +58,19 @@ class DailyScheduleParser:
 
         return cells[1:]
 
-    def lesson_slots_mapping(self, grade: int, day_of_week: Weekdays) -> Dict[str, LessonSlot]:
+    def lesson_slots_mapping(
+        self, grade: int, day_of_week: Weekdays
+    ) -> Dict[str, LessonSlot]:
         schedule: Dict[str, LessonSlot] = {}
         cells = self.cell_pairs(grade, day_of_week)
 
         for time_cell, lesson_info_cell in cells:
             time: str = time_cell.text
-            lesson_info = lesson_info_cell.text if lesson_info_cell.text.replace(" ", "") != "" else None
+            lesson_info = (
+                lesson_info_cell.text
+                if lesson_info_cell.text.replace(" ", "") != ""
+                else None
+            )
 
             if not schedule.get(time):
                 schedule[time] = LessonSlot(
