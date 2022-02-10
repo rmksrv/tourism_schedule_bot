@@ -9,6 +9,7 @@ from core.downloader import schedule_doc_data, download
 
 def main():
     assert os.environ.get("tourism_schedule_bot_token"), "No token provided"
+    # port = os.getenv('PORT', default=8000)
 
     print("Start")
     print("Download schedule")
@@ -28,6 +29,7 @@ def main():
 
     print("Polling")
     updater.start_polling()
+    # updater.start_webhook(port=port)
     updater.idle()
 
 
