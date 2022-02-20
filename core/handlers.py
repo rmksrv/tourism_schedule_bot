@@ -1,129 +1,53 @@
 from datetime import date, timedelta
-from pathlib import Path
 
-from telegram import (
-    Update,
-    ReplyKeyboardRemove,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    ParseMode,
-)
-from telegram.ext import CallbackContext
+from aiogram import types, Dispatcher
+from loguru import logger
 
-from core import utils
-from core.constants import BotCommands, BOT_NAME, Weekdays
-from core.daily_schedule import DailyScheduleParser
+from core.constants import BOT_NAME, Weekdays
+from core.services import schedule_service
+from core.utils import beautified_schedule_response, is_bottom_week
 
 
-def command_handler(update: Update, context: CallbackContext):
-    if update.message.text == "/start":
-        return start(update, context)
-    else:
-        return unknown_message(update, context)
+async def cmd_start(message: types.Message):
+    logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
+    # TODO: сделать мсг получше
+    ans = f"Привет, я бот {BOT_NAME}. Я создан, чтобы потешить эго моего создателя. А еще я могу " \
+          f"подсказать расписание на сегодня или завтра."
+    await message.answer(ans)
+    logger.debug("Bot answered: " + repr(ans))
 
 
-def message_handler(update: Update, context: CallbackContext):
-    if update.message.text == BotCommands.Today.value:
-        return today_schedule(update, context)
-    elif update.message.text == BotCommands.Tomorrow.value:
-        return tomorrow_schedule(update, context)
-    elif update.message.text == BotCommands.IsBottomWeek.value:
-        return is_bottom_week(update, context)
-    elif update.message.text == BotCommands.ForEnglishSpeaker.value:
-        return for_english_speaker(update, context)
-    else:
-        return unknown_message(update, context)
-
-
-# Command handlers
-
-
-def start(update: Update, context: CallbackContext):
-    info_message = (
-        f"Привет, я бот {BOT_NAME}. Я создан, чтобы потешить эго моего создателя. А еще я могу "
-        f"подсказать расписание на сегодня или завтра."
-    )
-    context.bot.send_message(update.effective_chat.id, info_message)
-    action_menu(update, context)
-
-
-# Message handlers
-
-
-def action_menu(update: Update, context: CallbackContext):
-    reply_markup = ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text=BotCommands.Today.value),
-                KeyboardButton(text=BotCommands.Tomorrow.value),
-            ],
-            [
-                KeyboardButton(text=BotCommands.IsBottomWeek.value),
-                KeyboardButton(text=BotCommands.ForEnglishSpeaker.value),
-            ],
-        ],
-        resize_keyboard=True,
-    )
-    update.message.reply_text(
-        text="Выбери действие",
-        reply_markup=reply_markup,
-    )
-
-
-def unknown_message(update: Update, context: CallbackContext):
-    info_message = "Я это не умею =("
-    context.bot.send_message(update.effective_chat.id, info_message)
-    action_menu(update, context)
-
-
-def today_schedule(update: Update, context: CallbackContext):
+async def cmd_today_schedule(message: types.Message):
+    logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
     d = date.today()
-    info_message = f"Расписание на сегодня, <b>{d} ({Weekdays.from_date(d).value})</b>"
-    context.bot.send_message(
-        update.effective_chat.id, info_message, parse_mode=ParseMode.HTML
-    )
-
-    p = DailyScheduleParser(Path("Туризм.docx"))
-    grade = 3
-    response = utils.beautified_schedule_response(p.today_schedule(grade))
-    update.message.reply_text(
-        text=response,
-        reply_markup=ReplyKeyboardRemove(),
-        parse_mode=ParseMode.HTML,
-    )
-    action_menu(update, context)
+    ans = f"Расписание на сегодня, <b>{d} ({Weekdays.from_date(d).value})</b>"
+    await message.answer(ans)
+    logger.debug("Bot answered: " + repr(ans))
+    ans = beautified_schedule_response(schedule_service.today_schedule(grade=3)) or "Свободный день!"
+    await message.answer(ans)
+    logger.debug("Bot answered: " + repr(ans))
 
 
-def tomorrow_schedule(update: Update, context: CallbackContext):
+async def cmd_tomorrow_schedule(message: types.Message):
+    logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
     d = date.today() + timedelta(days=1)
-    info_message = f"Расписание на завтра, <b>{d} ({Weekdays.from_date(d).value})</b>"
-    context.bot.send_message(
-        update.effective_chat.id, info_message, parse_mode=ParseMode.HTML
-    )
-
-    p = DailyScheduleParser(Path("Туризм.docx"))
-    grade = 3
-    response = utils.beautified_schedule_response(p.tomorrow_schedule(grade))
-    update.message.reply_text(
-        text=response,
-        reply_markup=ReplyKeyboardRemove(),
-        parse_mode=ParseMode.HTML,
-    )
-    action_menu(update, context)
+    ans = f"Расписание на завтра, <b>{d} ({Weekdays.from_date(d).value})</b>"
+    await message.answer(ans)
+    logger.debug("Bot answered: " + repr(ans))
+    ans = beautified_schedule_response(schedule_service.tomorrow_schedule(grade=3)) or "Свободный день!"
+    await message.answer(ans)
+    logger.debug("Bot answered: " + repr(ans))
 
 
-def is_bottom_week(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        text="<b><i>Да</i></b>" if utils.is_bottom_week() else "<b><i>Неа</i></b>",
-        reply_markup=ReplyKeyboardRemove(),
-        parse_mode=ParseMode.HTML,
-    )
-    action_menu(update, context)
+async def cmd_is_bottom_week(message: types.Message):
+    logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
+    ans = "<b><i>Да</i></b>" if is_bottom_week() else "<b><i>Нет</i></b>"
+    await message.answer(ans)
+    logger.debug("Bot answered: " + repr(ans))
 
 
-def for_english_speaker(update, context):
-    update.message.reply_text(
-        text="I'm sorry very well, how v zhopu do you do? (учите русский)",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-    action_menu(update, context)
+def register_handlers(dispatcher: Dispatcher):
+    dispatcher.register_message_handler(cmd_start, commands=["start", "help"])
+    dispatcher.register_message_handler(cmd_today_schedule, commands=["today_schedule"])
+    dispatcher.register_message_handler(cmd_tomorrow_schedule, commands=["tomorrow_schedule"])
+    dispatcher.register_message_handler(cmd_is_bottom_week, commands=["is_bottom_week"])

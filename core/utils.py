@@ -1,8 +1,6 @@
 from datetime import date
 from typing import Dict, Optional
 
-from core.constants import Weekdays
-
 
 def is_bottom_week(d: date = date.today()) -> bool:
     return int(d.strftime("%V")) % 2 == 0
