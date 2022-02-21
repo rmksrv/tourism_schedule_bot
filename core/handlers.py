@@ -4,8 +4,8 @@ from aiogram import types, Dispatcher
 from loguru import logger
 
 from core.constants import BOT_NAME, Weekdays
-from core.services import schedule_service
 from core.utils import beautified_schedule_response, is_bottom_week
+from services import schedule_service
 
 
 async def cmd_start(message: types.Message):
@@ -23,7 +23,7 @@ async def cmd_today_schedule(message: types.Message):
     ans = f"Расписание на сегодня, <b>{d} ({Weekdays.from_date(d).value})</b>"
     await message.answer(ans)
     logger.debug("Bot answered: " + repr(ans))
-    ans = beautified_schedule_response(schedule_service.today_schedule(grade=3)) or "Свободный день!"
+    ans = beautified_schedule_response(await schedule_service.today_schedule(grade=3)) or "Свободный день!"
     await message.answer(ans)
     logger.debug("Bot answered: " + repr(ans))
 
@@ -34,7 +34,7 @@ async def cmd_tomorrow_schedule(message: types.Message):
     ans = f"Расписание на завтра, <b>{d} ({Weekdays.from_date(d).value})</b>"
     await message.answer(ans)
     logger.debug("Bot answered: " + repr(ans))
-    ans = beautified_schedule_response(schedule_service.tomorrow_schedule(grade=3)) or "Свободный день!"
+    ans = beautified_schedule_response(await schedule_service.tomorrow_schedule(grade=3)) or "Свободный день!"
     await message.answer(ans)
     logger.debug("Bot answered: " + repr(ans))
 
