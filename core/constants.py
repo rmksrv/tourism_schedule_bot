@@ -5,7 +5,8 @@ from enum import Enum
 BOT_NAME = "TourismSchedule"
 BOT_USERNAME = "tourism_schedule_bot"
 
-SCHEDULES_PAGE_URL = r"http://www.imomi.unn.ru/education/raspisanie-zanyatiy"
+IMOMI_ROOT_URL = r"http://www.imomi.unn.ru"
+IMOMI_SCHEDULES_PAGE_URL = r"http://www.imomi.unn.ru/education/raspisanie-zanyatiy"
 
 
 class BotCommands(Enum):

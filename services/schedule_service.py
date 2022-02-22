@@ -1,30 +1,56 @@
-from datetime import date, timedelta
+import asyncio
+import os
+import re
+from datetime import date, timedelta, datetime
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple
-from dataclasses import dataclass
+from typing import Optional, Tuple
+from dataclasses import dataclass, field
+
+import aiofiles
+import aiohttp
 from docx import Document
 from docx.table import _Cell
 from loguru import logger
+from bs4 import BeautifulSoup
 
-from core.constants import Weekdays
-from core.utils import is_bottom_week
+from core.constants import Weekdays, IMOMI_SCHEDULES_PAGE_URL, IMOMI_ROOT_URL
+from core.utils import is_bottom_week, singleton
 
 
+@singleton
 class ScheduleService:
     def __init__(self):
-        logger.info("Init ScheduleService")
-        self.schedule_parser = DailyScheduleParser(Path("Туризм.docx"))
-        logger.info("ScheduleService initialized successfully")
+        logger.info(f"Create instance of {type(self).__name__}")
+        self.update_delay = 60
+        self.location = Path("Туризм.docx")
+        self.parser = DailyScheduleParser(self.location)
+        self.update_schedule_task = asyncio.create_task(self._update_schedule_task())
+        logger.info(f"{type(self).__name__} created successfully")
 
-    async def tomorrow_schedule(self, grade: int) -> Dict[str, Optional[str]]:
+    async def _update_schedule_task(self):
+        while True:
+            async with aiohttp.ClientSession() as session:
+                logger.debug("Starting update schedule task")
+                link = await ScheduleDocDownloader.get_link(session)
+                await ScheduleDocDownloader.fetch(session, link, self.location, self.location.name)
+                logger.debug(
+                    "Schedule downloaded to {loc}. Next update will be at {next_launch_time} ({update_delay}s)".format(
+                        loc=self.location,
+                        next_launch_time=datetime.now() + timedelta(seconds=self.update_delay),
+                        update_delay=self.update_delay,
+                    )
+                )
+            await asyncio.sleep(self.update_delay)
+
+    async def tomorrow_schedule(self, grade: int) -> dict[str, Optional[str]]:
         return await self.daily_schedule(date.today() + timedelta(days=1), grade)
 
-    async def today_schedule(self, grade: int) -> Dict[str, Optional[str]]:
+    async def today_schedule(self, grade: int) -> dict[str, Optional[str]]:
         return await self.daily_schedule(date.today(), grade)
 
-    async def daily_schedule(self, d: date, grade: int) -> Dict[str, Optional[str]]:
+    async def daily_schedule(self, d: date, grade: int) -> dict[str, Optional[str]]:
         logger.debug(f"Call daily_schedule(d={d}, grade={grade})")
-        mapping = await self.schedule_parser.lesson_slots_mapping(grade, Weekdays.from_date(d))
+        mapping = await self.parser.lesson_slots_mapping(grade, Weekdays.from_date(d))
         schedule = {}
         if is_bottom_week(d):
             schedule = {t: ls.bottom_week_lesson for t, ls in mapping.items()}
@@ -42,14 +68,14 @@ class LessonSlot:
 
 class DailyScheduleParser:
     def __init__(self, filepath: Path):
-        logger.debug(f"Init DailyScheduleParser(file={filepath.name})")
+        logger.info(f"Init {type(self).__name__}")
         self.filepath = filepath
-        self._docx = Document(self.filepath)
-        logger.debug(f"DailyScheduleParser(file={filepath.name}) initialized successfully")
+        self.docx = Document(self.filepath)
+        logger.info(f"{type(self).__name__} initialized successfully")
 
-    async def cell_pairs(self, grade: int, day: Weekdays) -> List[Tuple[_Cell]]:
-        grade_to_table_map = {grade + 1: self._docx.tables[grade] for grade, _ in enumerate(self._docx.tables)}
-        allday_cells: List[Tuple[_Cell]] = {
+    async def cell_pairs(self, grade: int, day: Weekdays) -> list[Tuple[_Cell]]:
+        grade_to_table_map = {grade + 1: self.docx.tables[grade] for grade, _ in enumerate(self.docx.tables)}
+        allday_cells: list[Tuple[_Cell]] = {
             grade: [row.cells for row in table.rows] for grade, table in grade_to_table_map.items()
         }[grade]
 
@@ -67,11 +93,11 @@ class DailyScheduleParser:
 
         return cells[1:]
 
-    async def lesson_slots_mapping(self, grade: int, day_of_week: Weekdays) -> Dict[str, LessonSlot]:
+    async def lesson_slots_mapping(self, grade: int, day_of_week: Weekdays) -> dict[str, LessonSlot]:
         if day_of_week == Weekdays.Sunday:
             return {}
 
-        schedule: Dict[str, LessonSlot] = {}
+        schedule: dict[str, LessonSlot] = {}
         cells = await self.cell_pairs(grade, day_of_week)
 
         for time_cell, lesson_info_cell in cells:
@@ -87,4 +113,33 @@ class DailyScheduleParser:
 
 
 class ScheduleDocDownloader:
-    pass
+    @staticmethod
+    async def get_link(session: aiohttp.ClientSession) -> str:
+        async with session.get(IMOMI_SCHEDULES_PAGE_URL, timeout=0) as response:
+            bs = BeautifulSoup(await response.text(), features="html.parser")
+            panels = bs.find_all("div", {"class": "panel-body"})
+            bachelor_panel = next((p for p in panels if "Бакалавриат" in p.text), None)
+            found_link = bachelor_panel.find_next("a", text=re.compile(".*Туризм.*")).attrs.get("href")
+            return IMOMI_ROOT_URL + found_link
+
+    @staticmethod
+    async def fetch(session: aiohttp.ClientSession, link: str, location: Path, name: str) -> None:
+        """
+        https://stackoverflow.com/questions/58804285/asynchronous-download-of-files
+        """
+        async with session.get(link, timeout=0) as response:
+            location = location.absolute()
+            logger.debug(f"Fetching {name}")
+            try:
+                file = await aiofiles.open(location, mode="wb")
+                await file.write(await response.content.read())
+                await file.close()
+                logger.debug(f"{name} downloaded")
+            except FileNotFoundError:
+                loc = "".join((r"/".join((str(location).split("/")[:-1])), "/"))
+                command = " ".join(("mkdir -p", loc))
+                os.system(command)
+                file = await aiofiles.open(location, mode="wb")
+                await file.write(await response.content.read())
+                await file.close()
+                logger.debug(f"{name} downloaded")
