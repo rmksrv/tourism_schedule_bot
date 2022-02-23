@@ -13,13 +13,12 @@ class BotCommands(Enum):
     Today = "Сегодня"
     Tomorrow = "Завтра"
     IsBottomWeek = "Эта неделя нижняя?"
-    ForEnglishSpeaker = "For English-speaking students"
-    Monday = "Понедельник"
-    Tuesday = "Вторник"
-    Wednesday = "Среда"
-    Thursday = "Четверг"
-    Friday = "Пятница"
-    Saturday = "Суббота"
+    # Monday = "Понедельник"
+    # Tuesday = "Вторник"
+    # Wednesday = "Среда"
+    # Thursday = "Четверг"
+    # Friday = "Пятница"
+    # Saturday = "Суббота"
 
 
 class Weekdays(Enum):

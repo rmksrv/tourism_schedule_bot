@@ -21,7 +21,7 @@ from core.utils import is_bottom_week, singleton
 class ScheduleService:
     def __init__(self):
         logger.info(f"Create instance of {type(self).__name__}")
-        self.update_delay = 60
+        self.update_delay = 28800  # every 8 hours runs update_schedule_task
         self.location = Path("Туризм.docx")
         self.parser = DailyScheduleParser(self.location)
         self.update_schedule_task = asyncio.create_task(self._update_schedule_task())
