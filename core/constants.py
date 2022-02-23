@@ -4,6 +4,7 @@ from enum import Enum
 
 BOT_NAME = "TourismSchedule"
 BOT_USERNAME = "tourism_schedule_bot"
+BOT_GITHUB_REPO = r"https://github.com/rmksrv/tourism_schedule_bot"
 
 IMOMI_ROOT_URL = r"http://www.imomi.unn.ru"
 IMOMI_SCHEDULES_PAGE_URL = r"http://www.imomi.unn.ru/education/raspisanie-zanyatiy"

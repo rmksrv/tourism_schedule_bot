@@ -4,7 +4,7 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from loguru import logger
 
-from core.constants import BOT_NAME, Weekdays, BotCommands
+from core.constants import BOT_NAME, BOT_GITHUB_REPO, Weekdays, BotCommands
 from core.utils import beautified_schedule_response, is_bottom_week
 from services.schedule_service import ScheduleService
 
@@ -18,13 +18,14 @@ def keyboard() -> types.ReplyKeyboardMarkup:
 
 async def cmd_start(message: types.Message):
     logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
-    # TODO: сделать мсг получше
     ans = (
         f"Привет, я бот {BOT_NAME}. Я создан, чтобы потешить эго моего создателя. А еще я могу "
-        f"подсказать расписание на сегодня или завтра."
+        f"подсказать расписание для студентов бакалавров ИМОМИ направления \"Туризм\".\n"
+        f"Если хотите поддержать проект - поставьте ⭐ репозиторию на Github: {BOT_GITHUB_REPO}"
     )
     await message.answer(ans, reply_markup=keyboard())
     logger.debug("Bot answered: " + repr(ans))
+
 
 
 async def cmd_today_schedule(message: types.Message):
