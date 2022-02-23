@@ -3,7 +3,7 @@ from pathlib import Path
 from aiogram import executor
 from loguru import logger
 
-from core.bot import dispatcher
+from core.bot import dispatcher, redis_url
 from core.handlers import register_handlers
 from services.schedule_service import ScheduleService
 
@@ -14,12 +14,20 @@ def setup_logger(file: Path) -> None:
 
 async def on_startup(_):
     setup_logger(Path("debug.log"))
+
+    logger.info("Starting up!")
+    logger.debug(f"Redis url: {redis_url}")
     register_handlers(dispatcher)
+    # Init services first time
     ScheduleService()
     logger.info("Bot is online!")
 
 
 async def on_shutdown(_):
+    logger.info("Shutting down!")
+    logger.info("Closing storage")
+    await dispatcher.storage.close()
+    await dispatcher.storage.wait_closed()
     logger.info("Bot is offline!")
 
 
