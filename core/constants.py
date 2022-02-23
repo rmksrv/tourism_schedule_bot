@@ -14,6 +14,7 @@ class BotCommands(Enum):
     Today = "Сегодня"
     Tomorrow = "Завтра"
     IsBottomWeek = "Эта неделя нижняя?"
+    ChangeGrade = "Сменить курс"
     # Monday = "Понедельник"
     # Tuesday = "Вторник"
     # Wednesday = "Среда"

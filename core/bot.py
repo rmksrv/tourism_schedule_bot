@@ -1,6 +1,7 @@
 import os
 
 from aiogram import Bot, Dispatcher, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from loguru import logger
 
 token = os.environ.get("tourism_schedule_bot_token")
@@ -10,4 +11,4 @@ if not token:
     exit()
 
 bot = Bot(token=token, parse_mode=types.ParseMode.HTML)
-dispatcher = Dispatcher(bot)
+dispatcher = Dispatcher(bot, storage=MemoryStorage())
