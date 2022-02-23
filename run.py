@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 from aiogram import executor
@@ -19,7 +20,7 @@ async def on_startup(_):
     logger.debug(f"Redis url: {redis_url}")
     register_handlers(dispatcher)
     # Init services first time
-    ScheduleService()
+    await ScheduleService().fetch_schedule_file()
     logger.info("Bot is online!")
 
 

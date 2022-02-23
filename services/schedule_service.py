@@ -23,23 +23,29 @@ class ScheduleService:
         logger.info(f"Create instance of {type(self).__name__}")
         self.update_delay = 28800  # every 8 hours runs update_schedule_task
         self.location = Path("Туризм.docx")
-        self.parser = DailyScheduleParser(self.location)
         self.update_schedule_task = asyncio.create_task(self._update_schedule_task())
+        self.parser: Optional[DailyScheduleParser] = None
         logger.info(f"{type(self).__name__} created successfully")
+
+    async def fetch_schedule_file(self):
+        async with aiohttp.ClientSession() as session:
+            link = await ScheduleDocDownloader.get_link(session)
+            logger.debug(f"Fetching {link}")
+            await ScheduleDocDownloader.fetch(session, link, self.location, self.location.name)
+            logger.debug(
+                "Schedule downloaded to {loc}. Next update will be at {next_launch_time} ({update_delay}s)".format(
+                    loc=self.location,
+                    next_launch_time=datetime.now() + timedelta(seconds=self.update_delay),
+                    update_delay=self.update_delay,
+                )
+            )
+        if not self.parser:
+            self.parser = DailyScheduleParser(self.location)
 
     async def _update_schedule_task(self):
         while True:
-            async with aiohttp.ClientSession() as session:
-                logger.debug("Starting update schedule task")
-                link = await ScheduleDocDownloader.get_link(session)
-                await ScheduleDocDownloader.fetch(session, link, self.location, self.location.name)
-                logger.debug(
-                    "Schedule downloaded to {loc}. Next update will be at {next_launch_time} ({update_delay}s)".format(
-                        loc=self.location,
-                        next_launch_time=datetime.now() + timedelta(seconds=self.update_delay),
-                        update_delay=self.update_delay,
-                    )
-                )
+            logger.debug("Starting update schedule task")
+            await self.fetch_schedule_file()
             await asyncio.sleep(self.update_delay)
 
     async def tomorrow_schedule(self, grade: int) -> dict[str, Optional[str]]:
