@@ -10,7 +10,7 @@ IMOMI_ROOT_URL = r"http://www.imomi.unn.ru"
 IMOMI_SCHEDULES_PAGE_URL = r"http://www.imomi.unn.ru/education/raspisanie-zanyatiy"
 
 
-class BotCommands(Enum):
+class UserCommands(Enum):
     Today = "Сегодня"
     Tomorrow = "Завтра"
     IsBottomWeek = "Эта неделя нижняя?"
@@ -21,6 +21,11 @@ class BotCommands(Enum):
     # Thursday = "Четверг"
     # Friday = "Пятница"
     # Saturday = "Суббота"
+
+
+class AdminCommands(Enum):
+    Broadcast = "Анонс"
+    Exit = "Выйти"
 
 
 class Weekdays(Enum):

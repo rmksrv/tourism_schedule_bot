@@ -15,9 +15,13 @@ if not bot_token:
 
 
 if not redis_url:
-    logger.error('No redis url defined! Please, pass it to "REDIS_URL" env var. Closing...')
-    exit()
+    logger.error('No redis url defined! Please, pass it to "REDIS_URL" env var to use Redis storage.')
+    logger.error("Bot will start with Memory storage")
+    from aiogram.contrib.fsm_storage.memory import MemoryStorage
+    storage = MemoryStorage()
+else:
+    redis_url = urlparse(redis_url)
+    storage = RedisStorage2(redis_url.hostname, redis_url.port, password=redis_url.password)
 
 bot = Bot(token=bot_token, parse_mode=types.ParseMode.HTML)
-redis_url = urlparse(redis_url)
-dispatcher = Dispatcher(bot, storage=RedisStorage2(redis_url.hostname, redis_url.port, password=redis_url.password))
+dispatcher = Dispatcher(bot, storage=storage)
