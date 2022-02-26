@@ -8,8 +8,8 @@ from loguru import logger
 
 from core.constants import BOT_GITHUB_REPO, BOT_NAME, AdminCommands, UserCommands, Weekdays
 from core.utils import beautified_schedule_response
-from services.schedule_service import ScheduleService, is_bottom_week
 from services.meme_service import MemeService
+from services.schedule_service import ScheduleService, is_bottom_week
 
 available_grades = [str(i + 1) for i in range(4)]
 
@@ -112,7 +112,6 @@ async def cmd_today_schedule(message: types.Message, state: FSMContext):
     logger.debug("Bot answered: " + repr(ans))
 
 
-
 async def cmd_tomorrow_schedule(message: types.Message):
     logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
 
@@ -128,7 +127,6 @@ async def cmd_tomorrow_schedule(message: types.Message):
     ans = await MemeService().get_answer_sign()
     await message.answer(ans, reply_markup=keyboard_user_commands())
     logger.debug("Bot answered: " + repr(ans))
-
 
 
 async def cmd_is_bottom_week(message: types.Message):

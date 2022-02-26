@@ -1,8 +1,9 @@
 import random
 from enum import Enum
 
-from core.utils import singleton
 from aiobalaboba import balaboba
+
+from core.utils import singleton
 
 
 class BalabobaStyles(Enum):
