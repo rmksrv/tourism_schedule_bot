@@ -18,6 +18,7 @@ if not redis_url:
     logger.error('No redis url defined! Please, pass it to "REDIS_URL" env var to use Redis storage.')
     logger.error("Bot will start with Memory storage")
     from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
     storage = MemoryStorage()
 else:
     redis_url = urlparse(redis_url)

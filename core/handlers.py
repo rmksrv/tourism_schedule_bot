@@ -1,17 +1,14 @@
-import asyncio
 from datetime import date, timedelta
 
-from aiogram import types, Dispatcher
+from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.utils import exceptions
 from loguru import logger
 
-from core.bot import bot, bot_token
-from core.constants import BOT_NAME, BOT_GITHUB_REPO, Weekdays, UserCommands, AdminCommands
-from core.utils import beautified_schedule_response, is_bottom_week
-from services.schedule_service import ScheduleService
+from core.constants import BOT_GITHUB_REPO, BOT_NAME, AdminCommands, UserCommands, Weekdays
+from core.utils import beautified_schedule_response
+from services.schedule_service import ScheduleService, is_bottom_week
 
 available_grades = [str(i + 1) for i in range(4)]
 

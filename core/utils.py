@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Dict, Optional
 
 
@@ -11,10 +10,6 @@ def singleton(cls):
         return instances[cls]
 
     return get_instance
-
-
-def is_bottom_week(d: date = date.today()) -> bool:
-    return int(d.strftime("%V")) % 2 == 0
 
 
 def beautified_schedule_response(schedule: Dict[str, Optional[str]]) -> str:

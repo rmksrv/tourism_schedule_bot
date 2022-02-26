@@ -1,6 +1,5 @@
-from datetime import date
+from datetime import datetime
 from enum import Enum
-
 
 BOT_NAME = "TourismSchedule"
 BOT_USERNAME = "tourism_schedule_bot"
@@ -38,7 +37,7 @@ class Weekdays(Enum):
     Sunday = "ВОСКРЕСЕНЬЕ"
 
     @classmethod
-    def from_date(cls, d: date):
+    def from_date(cls, d: datetime):
         weekday = d.weekday() + 1
         if weekday == 1:
             return Weekdays.Monday

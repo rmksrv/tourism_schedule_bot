@@ -1,20 +1,32 @@
 import asyncio
 import os
 import re
-from datetime import date, timedelta, datetime
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional, Tuple
-from dataclasses import dataclass, field
 
 import aiofiles
 import aiohttp
+import pytz
+from bs4 import BeautifulSoup
 from docx import Document
 from docx.table import _Cell
 from loguru import logger
-from bs4 import BeautifulSoup
 
-from core.constants import Weekdays, IMOMI_SCHEDULES_PAGE_URL, IMOMI_ROOT_URL
-from core.utils import is_bottom_week, singleton
+from core.constants import IMOMI_ROOT_URL, IMOMI_SCHEDULES_PAGE_URL, Weekdays
+from core.utils import singleton
+
+local_tz = pytz.timezone("Europe/Moscow")
+
+
+def utc_to_local(utc_dt):
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    return local_tz.normalize(local_dt)
+
+
+def is_bottom_week(d: date = utc_to_local(datetime.today())) -> bool:
+    return int(d.strftime("%V")) % 2 == 0
 
 
 @singleton
@@ -49,12 +61,12 @@ class ScheduleService:
             await asyncio.sleep(self.update_delay)
 
     async def tomorrow_schedule(self, grade: int) -> dict[str, Optional[str]]:
-        return await self.daily_schedule(date.today() + timedelta(days=1), grade)
+        return await self.daily_schedule(utc_to_local(datetime.today() + timedelta(days=1)), grade)
 
     async def today_schedule(self, grade: int) -> dict[str, Optional[str]]:
-        return await self.daily_schedule(date.today(), grade)
+        return await self.daily_schedule(utc_to_local(datetime.today()), grade)
 
-    async def daily_schedule(self, d: date, grade: int) -> dict[str, Optional[str]]:
+    async def daily_schedule(self, d: datetime, grade: int) -> dict[str, Optional[str]]:
         logger.debug(f"Call daily_schedule(d={d}, grade={grade})")
         mapping = await self.parser.lesson_slots_mapping(grade, Weekdays.from_date(d))
         schedule = {}
