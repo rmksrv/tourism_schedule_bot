@@ -68,14 +68,6 @@ async def grade_chosen(message: types.Message, state: FSMContext):
     logger.debug("Bot answered: " + repr(ans))
 
 
-async def token_passed(message: types.Message, state: FSMContext):
-    logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
-    await UserState.admin_mode_menu.set()
-    ans = f"Доступ подтвержден пользователю {message.from_user.username}!"
-    await message.answer(ans, reply_markup=keyboard_admin_commands())
-    logger.debug("Bot answered: " + repr(ans))
-
-
 async def cmd_start(message: types.Message, state: FSMContext):
     logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
     ans = (
@@ -142,59 +134,6 @@ async def cmd_change_grade(message: types.Message, state: FSMContext):
     await grade_start(message, state)
 
 
-async def cmd_broadcast_start(message: types.Message, state: FSMContext):
-    logger.debug(f'User @{message.from_user.username} sent "{message.text}"')
-    ans = "Введи текст, который хочешь отправить"
-    await UserState.admin_mode_broadcast_message_waiting.set()
-    await message.answer(ans, reply_markup=types.ReplyKeyboardMarkup())
-    logger.debug("Bot answered: " + repr(ans))
-
-
-async def cmd_broadcast_send(message: types.Message, state: FSMContext):
-    count = 0
-    try:
-        for user_id in get_users(state):
-            if await send_message(user_id, message.text):
-                count += 1
-            await asyncio.sleep(.05)
-    finally:
-        logger.info(f"{count} messages sent successfully!")
-
-    await UserState.admin_mode_menu.set()
-    ans = "Готово! Сообщение доставлено пользователям бота."
-    await message.answer(ans)
-    logger.debug("Bot answered: " + repr(ans))
-
-
-async def send_message(user_id: int, text: str, disable_notification: bool = False) -> bool:
-    try:
-        await bot.send_message(user_id, text, disable_notification=disable_notification)
-    except exceptions.BotBlocked:
-        logger.error(f"Target [ID:{user_id}]: blocked by user")
-    except exceptions.ChatNotFound:
-        logger.error(f"Target [ID:{user_id}]: invalid user ID")
-    except exceptions.RetryAfter as e:
-        logger.error(f"Target [ID:{user_id}]: Flood limit is exceeded. Sleep {e.timeout} seconds.")
-        await asyncio.sleep(e.timeout)
-        return await send_message(user_id, text)  # Recursive call
-    except exceptions.UserDeactivated:
-        logger.error(f"Target [ID:{user_id}]: user is deactivated")
-    except exceptions.TelegramAPIError:
-        logger.exception(f"Target [ID:{user_id}]: failed")
-    else:
-        logger.info(f"Target [ID:{user_id}]: success")
-        return True
-    return False
-
-
-def get_users(state: FSMContext):
-    yield from state.storage.data.keys()
-
-
-async def cmd_admin_exit(message: types.Message, state: FSMContext):
-    await cmd_start(message, state)
-
-
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands=["start"], state="*")
     dp.register_message_handler(cmd_help, commands=["help"], state="*")
@@ -210,13 +149,4 @@ def register_handlers(dp: Dispatcher):
     )
     dp.register_message_handler(
         cmd_change_grade, Text(equals=UserCommands.ChangeGrade.value), state=UserState.grade_defined
-    )
-    # Admin
-    dp.register_message_handler(token_passed, Text(equals=bot_token), state="*")
-    dp.register_message_handler(
-        cmd_broadcast_start, Text(equals=AdminCommands.Broadcast.value), state=UserState.admin_mode_menu
-    )
-    dp.register_message_handler(cmd_broadcast_send, state=UserState.admin_mode_broadcast_message_waiting)
-    dp.register_message_handler(
-        cmd_admin_exit, Text(equals=AdminCommands.Exit.value), state=UserState.admin_mode_menu
     )
