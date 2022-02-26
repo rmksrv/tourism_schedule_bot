@@ -1,24 +1,30 @@
-from datetime import date
+from datetime import datetime
 from enum import Enum
-
 
 BOT_NAME = "TourismSchedule"
 BOT_USERNAME = "tourism_schedule_bot"
+BOT_GITHUB_REPO = r"https://github.com/rmksrv/tourism_schedule_bot"
 
-SCHEDULES_PAGE_URL = r"http://www.imomi.unn.ru/education/raspisanie-zanyatiy"
+IMOMI_ROOT_URL = r"http://www.imomi.unn.ru"
+IMOMI_SCHEDULES_PAGE_URL = r"http://www.imomi.unn.ru/education/raspisanie-zanyatiy"
 
 
-class BotCommands(Enum):
+class UserCommands(Enum):
     Today = "Сегодня"
     Tomorrow = "Завтра"
     IsBottomWeek = "Эта неделя нижняя?"
-    ForEnglishSpeaker = "For English-speaking students"
-    Monday = "Понедельник"
-    Tuesday = "Вторник"
-    Wednesday = "Среда"
-    Thursday = "Четверг"
-    Friday = "Пятница"
-    Saturday = "Суббота"
+    ChangeGrade = "Сменить курс"
+    # Monday = "Понедельник"
+    # Tuesday = "Вторник"
+    # Wednesday = "Среда"
+    # Thursday = "Четверг"
+    # Friday = "Пятница"
+    # Saturday = "Суббота"
+
+
+class AdminCommands(Enum):
+    Broadcast = "Анонс"
+    Exit = "Выйти"
 
 
 class Weekdays(Enum):
@@ -31,7 +37,7 @@ class Weekdays(Enum):
     Sunday = "ВОСКРЕСЕНЬЕ"
 
     @classmethod
-    def from_date(cls, d: date):
+    def from_date(cls, d: datetime):
         weekday = d.weekday() + 1
         if weekday == 1:
             return Weekdays.Monday

@@ -1,1 +1,1 @@
-bot: python3 tourism_schedule_bot.py
+bot: python3 run.py
